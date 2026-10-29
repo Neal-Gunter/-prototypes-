@@ -46,6 +46,7 @@ const KIND_SHIJUI := 13    # 尸傀（阳，读招）
 const KIND_BOSS6 := 14     # 无相·心魔（复制玩家的武器与法宝）
 const KIND_BOSS7 := 15     # 符祖（R36：远程，画符封路）
 const KIND_BOSS8 := 16     # 轮回使（R37：近身压迫 + 召「旧影」复现你的走位）
+const KIND_BOSS9 := 17     # 钟楼旧主（R39：隐藏 Boss · 慢而重的体修，教完美弹反）
 const ELITE_NAMES := {
 	KIND_JIANXIU: "剑 修 傀 儡",
 	KIND_FUXIU: "符 修",
@@ -389,6 +390,27 @@ func setup(k: int, pos: Vector2, p: Node, fx_node: Node) -> void:
 		lunge_speed = 430.0
 		dmg = 2
 		stagger_max = 140.0
+		z_index = 19
+	elif kind == KIND_BOSS9:
+		# R39 钟楼旧主：**隐藏 Boss** —— 全作第一个「招式完全可预测」的 Boss。
+		# 他不读招、不瞬移、不远程、不防御，只有一记慢刀；但硬直条 190 砍不动，
+		# 所以正解只有一个：**站住，等他抬手，弹**。
+		# 前摇 0.62s（见 _windup_now）是刻意拉长的 —— 慢到你看得清，才谈得上「练」。
+		is_boss = true
+		hp = 20
+		max_hp = 20
+		phase = 1
+		phase_max = 2
+		scale_f = 1.55           # 全作最大的体型：一眼看出「这是旧主」
+		windup_t = 0.62
+		attack_t = 0.16
+		recover_t = 0.52         # 收招也慢 —— 弹反后的反击窗口给得很足
+		attack_range = 112.0
+		aggro_range = 1200.0
+		move_speed = 96.0        # 全场最慢的 Boss：他不需要追，是你要上来
+		lunge_speed = 340.0
+		dmg = 2
+		stagger_max = 190.0      # 最高的硬直条：平砍几乎推不动，只能弹
 		z_index = 19
 	# ------------------------------------------------ R18 精英（都不是 Boss）
 	elif kind == KIND_JIANXIU:
@@ -1121,7 +1143,7 @@ func is_blade_boss() -> bool:
 func is_boss_family() -> bool:
 	return kind == KIND_BOSS2 or kind == KIND_BOSS3 or kind == KIND_BOSS4 \
 		or kind == KIND_BOSS5 or kind == KIND_BOSS6 or kind == KIND_BOSS7 \
-		or kind == KIND_BOSS8
+		or kind == KIND_BOSS8 or kind == KIND_BOSS9
 
 
 func _tier() -> int:
@@ -1131,6 +1153,11 @@ func _tier() -> int:
 
 
 func _windup_now() -> float:
+	# R39 钟楼旧主：前摇**故意拉长**到 0.62（普通 Boss 是 0.21~0.36）。
+	# 他存在的意义是教完美弹反 —— 慢到玩家看得清抬手，才谈得上「练」。
+	# 注意：这一条必须放在 _tier() 之前，否则二阶段 tier 变高会把前摇压回 0.21。
+	if kind == KIND_BOSS9:
+		return 0.62 if not berserk else 0.50
 	var t := _tier()
 	var w := 0.36
 	if t >= 2:
@@ -1183,6 +1210,17 @@ func _boss2_ai(delta: float) -> void:
 					if fx:
 						fx.text(global_position + Vector2(0, -76.0 * scale_f), "!", Color(1.0, 0.4, 0.45), 30)
 			if state == CHASE:
+				# R39 钟楼旧主：慢速逼近 → 进圈**停住** → 出慢刀。
+				# 停住是为了给玩家留出弹反距离：贴脸会让玩家看不清抬手。
+				if kind == KIND_BOSS9:
+					var want9 := float(facing) * move_speed
+					if dist < attack_range * 0.78:
+						want9 = 0.0
+					velocity.x = move_toward(velocity.x, want9, 620.0 * delta)
+					velocity.y = minf(velocity.y + 1680.0 * delta, 900.0)
+					if dist < attack_range and _cd <= 0.0:
+						_decide()
+					return
 				# R36 符祖：远程 —— 中距离画符齐射 + 周期性地面符爆（「画符封路」）
 				if kind == KIND_BOSS7:
 					if ranged_cd <= 0.0 and _player_ok():
@@ -1357,6 +1395,12 @@ func _boss2_ai(delta: float) -> void:
 ## 出招决策：三阶段有 50% 概率先「读指令」
 func _decide() -> void:
 	unblockable = false
+	# R39 钟楼旧主：**只有一记慢刀**。不读招、不瞬移、不远程、不防御。
+	# 这是全作唯一「招式完全可预测」的 Boss —— 他的作用是让玩家练弹反，
+	# 而不是让玩家猜。所以这条必须抢在所有分支前面 return。
+	if kind == KIND_BOSS9:
+		_begin_windup(1.0)
+		return
 	var t := _tier()
 	# 前世身：血量 20% 以下，每次出招同时放两个技能
 	if is_blade_boss() and hp <= int(ceil(float(max_hp) * 0.2)):
@@ -1847,6 +1891,8 @@ func boss_title() -> String:
 			return "符 祖"
 		KIND_BOSS8:
 			return "轮 回 使"
+		KIND_BOSS9:
+			return "钟 楼 旧 主"
 	return "镇 钟 力 士"
 
 
@@ -2333,6 +2379,18 @@ func _draw() -> void:
 			if phase >= 2:
 				# 二阶段「借宝」：轮廓光掺一点法宝的青色
 				ac = ac.lerp(Color(0.55, 0.78, 1.0), 0.45)
+		elif kind == KIND_BOSS9:
+			# R39 钟楼旧主：**石灰 + 铜锈**的体修老匠 —— 全作最朴素的一只 Boss。
+			# 他不发光、不邪气，只有一件洗得发白的旧袍和一双铜色的手。
+			# 视觉上也刻意与其它 Boss 拉开：别人越到后面越「妖」，他越到后面越「旧」。
+			body = Color(0.145, 0.132, 0.118)
+			eye = Color(0.95, 0.78, 0.42)
+			ac = Color(0.72, 0.60, 0.38)
+			if phase >= 2:
+				ac = Color(0.92, 0.62, 0.32)
+			if berserk:
+				ac = Color(1.0, 0.45, 0.22)
+				aura = 0.55 + 0.45 * sin(_t * 12.0)
 		draw_circle(o + Vector2(0, -10) * s, 46.0 * s, Color(ac.r, ac.g, ac.b, 0.030 * aura))
 		draw_circle(o + Vector2(0, -10) * s, 30.0 * s, Color(ac.r, ac.g, ac.b, 0.045 * aura))
 		# R19b：镜子本身 —— 身后一圈竖立的椭圆，越近越亮

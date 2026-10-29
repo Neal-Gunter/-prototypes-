@@ -149,12 +149,28 @@ static func prologue_name() -> String:
 	return str(PROLOGUE["name"])
 
 
-## 序章是「一条线」：第 i 间只连前后两间，不走 3×2 网格
-static func prologue_neighbors(i: int) -> Dictionary:
+## R39 隐藏 Boss 房「钟楼 · 顶阁」—— 只有**无伤走完序章三间**才会开。
+## 单独一份，不并进 PROLOGUE：序章本身仍是「三间教学」，顶阁是额外加的一层。
+## 为什么不做成第 4 间常驻房：那会让每个新玩家都撞上隐藏 Boss，
+## 「隐藏」就没了。触发权在 main._finish_prologue()。
+const PROLOGUE_MASTER := {
+	"name": "钟 楼 · 顶 阁", "col": 3, "row": 0,
+	"kind": KIND_BOSS, "wave": 0, "boss": 17,
+}
+
+
+static func prologue_master_room() -> Dictionary:
+	return PROLOGUE_MASTER
+
+
+## 序章是「一条线」：第 i 间只连前后两间，不走 3×2 网格。
+## total 不传时按标准序章（3 间）算；进了顶阁之后 rooms 变 4 个元素，要显式传。
+static func prologue_neighbors(i: int, total: int = -1) -> Dictionary:
 	var out := {"west": false, "east": false, "north": false, "south": false}
+	var n: int = total if total > 0 else PROLOGUE["rooms"].size()
 	if i > 0:
 		out["west"] = true
-	if i < PROLOGUE["rooms"].size() - 1:
+	if i < n - 1:
 		out["east"] = true
 	return out
 

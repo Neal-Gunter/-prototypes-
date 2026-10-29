@@ -52,6 +52,10 @@ var seen_lines := {}
 var fragments_seen := {}
 ## R19a：序章「钟楼」是否已经走完（走完就不再自动进序章）
 var prologue_done := false
+## R39：隐藏 Boss「钟楼旧主」是否已打赢。
+## 与 prologue_done 分开：后者管「序章看过没」，前者管「顶阁通关没」。
+## 打赢之后序章不会再开顶阁（无伤也没用 —— 已经赢过了）。
+var old_master_beaten := false
 
 ## R16：已解锁的主角自述（"3" / "6" / "9" / "12"）
 var self_seen := {}
@@ -103,6 +107,7 @@ func load_cfg() -> void:
 	fragments_seen = _decode_seen(str(cf.get_value("lore", "fragments", "")))
 	self_seen = _decode_seen(str(cf.get_value("lore", "self", "")))
 	prologue_done = bool(cf.get_value("lore", "prologue", false))
+	old_master_beaten = bool(cf.get_value("lore", "old_master", false))
 	daoyun = maxi(0, int(cf.get_value("meta", "daoyun", 0)))
 	daoyun_total = maxi(0, int(cf.get_value("meta", "daoyun_total", 0)))
 	meridian_lv = _decode_lv(str(cf.get_value("meta", "meridian", "")))
@@ -131,6 +136,7 @@ func save_cfg() -> void:
 	cf.set_value("lore", "fragments", _encode_keys(fragments_seen))
 	cf.set_value("lore", "self", _encode_keys(self_seen))
 	cf.set_value("lore", "prologue", prologue_done)
+	cf.set_value("lore", "old_master", old_master_beaten)
 	cf.set_value("meta", "daoyun", daoyun)
 	cf.set_value("meta", "daoyun_total", daoyun_total)
 	cf.set_value("meta", "meridian", JSON.stringify(meridian_lv))

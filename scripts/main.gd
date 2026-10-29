@@ -90,6 +90,9 @@ var daily_seed_val := 0
 var daily_mode := false
 ## R19a：序章「钟楼」模式 —— 3 间线性房、无 Boss、不占主线进度
 var prologue_mode := false
+## R39：进序章那一刻的受击次数。序章走完时若没变过 = 无伤 → 开顶阁。
+## 用 Game.dmg_taken 的差值而不是 hp：hp 会被打坐回血掩盖，受击次数不会。
+var _prologue_dmg0 := 0
 var rng := RandomNumberGenerator.new()
 
 var reward_cards: Array = []
@@ -397,6 +400,9 @@ func _confirm_weapon() -> void:
 
 func _enter_level(idx: int) -> void:
 	level_index = idx
+	# R39：进主线关卡一定不在序章里 —— 不清的话「顶阁还没走完就重开」会把
+	# prologue_mode 带到下一局（T180 抓出来的：打赢过旧主，下一局仍被当成序章）
+	prologue_mode = false
 	# R20：进任何一关都清掉真结局标记 —— 它只在「最后一关打完的 WIN 页」有意义，
 	# 不清的话重开 / 换关会带着上一局的标记（T82 抓出来的）
 	true_ending = false
@@ -415,6 +421,8 @@ func _enter_level(idx: int) -> void:
 ## R19a：进序章 —— 3 间房，线性推进，没有 Boss、没有奖励卡
 func _enter_prologue() -> void:
 	prologue_mode = true
+	# R39：记下此刻的受击数，用来判「无伤走完」
+	_prologue_dmg0 = Game.dmg_taken
 	level_index = 0
 	level_name = RoomScript.prologue_name()
 	rooms = RoomScript.prologue_rooms()
@@ -428,12 +436,49 @@ func _enter_prologue() -> void:
 
 
 ## 序章走完 → 记一笔（不再自动进）→ 直接接上主线第一关
+## R39：**无伤走完**时先不开主线的门，而是开钟楼顶阁（隐藏 Boss 钟楼旧主）。
+## 注意 prologue_done 仍然要在这里置 true —— 它管的是「序章剧情看过了」，
+## 与「旧主打赢没」是两件事（后者记在 Cfg.old_master_beaten）。
 func _finish_prologue() -> void:
 	prologue_mode = false
 	Cfg.prologue_done = true
 	Cfg.save_cfg()
+	# R39：三间房一次没挨打 → 顶阁的门自己开了
+	if Game.dmg_taken == _prologue_dmg0 and not Cfg.old_master_beaten:
+		_enter_old_master()
+		return
 	if hud != null:
 		hud.show_prompt("序 章 · 完 · 钟 还 在 响", 2.4)
+	level_index = 0
+	_enter_level(level_index)
+
+
+## R39：进「钟楼 · 顶阁」—— 序章的第 4 间，也是隐藏 Boss 房。
+## 把它挂到序章的 rooms 数组尾部，这样门 / 房间名 / 结算都复用序章那套逻辑。
+## 玩家在这里死了不会调 _finish_prologue，所以下次开新局还能再试一次。
+func _enter_old_master() -> void:
+	prologue_mode = true
+	if rooms.size() == RoomScript.prologue_rooms().size():
+		# 注意：rooms 可能直接引用 rooms.gd 里的 const PROLOGUE —— 那是**只读数组**，
+		# 直接 append 会失败并中断整个函数（R39 踩到：顶阁一直进不去，room_i 停在第 3 间）。
+		# 所以先 duplicate 出一份可写的再追加。
+		rooms = rooms.duplicate()
+		rooms.append(RoomScript.prologue_master_room())
+		room_state = room_state.duplicate()
+		room_state.append("new")
+	if hud != null:
+		hud.show_prompt("顶 阁 · 门 开 了", 2.4)
+	SFX.play("gate", 0.9, -6.0)
+	_enter_room(rooms.size() - 1)
+
+
+## R39：打赢钟楼旧主 → 记一笔 → 接主线。
+func _finish_old_master() -> void:
+	Cfg.old_master_beaten = true
+	Cfg.save_cfg()
+	prologue_mode = false
+	if hud != null:
+		hud.show_prompt("旧 主 · 已 败 · 钟 声 归 你", 3.0)
 	level_index = 0
 	_enter_level(level_index)
 
@@ -554,7 +599,7 @@ func _enter_room(i: int) -> void:
 
 func _door_map(i: int) -> Dictionary:
 	var out := {"west": false, "east": false, "north": false, "south": false}
-	var nb: Dictionary = RoomScript.prologue_neighbors(i) if prologue_mode \
+	var nb: Dictionary = RoomScript.prologue_neighbors(i, rooms.size()) if prologue_mode \
 		else RoomScript.neighbors(level_index, i)
 	for k in nb.keys():
 		out[k] = true
@@ -1590,6 +1635,11 @@ func _resolve_room_clear(was_boss: bool) -> void:
 			return
 		_enter_reward()
 	else:
+		# R39：钟楼旧主打赢 → 直接接主线，不走「关卡通过」结算
+		# （顶阁不是关卡，挂的是序章那条线；走 _enter_clear 会误触发关卡通关流程）
+		if prologue_mode and int(rooms[room_i].get("boss", 2)) == EnemyScript.KIND_BOSS9:
+			_finish_old_master()
+			return
 		# Boss 房已击败 → 关卡通过
 		# R21：无相·心魔（boss=14）打掉 → 必掉「影」系法宝三选一，选完再过关
 		if int(rooms[room_i].get("boss", 2)) == EnemyScript.KIND_BOSS6:
@@ -2980,4 +3030,5 @@ func _boss_name(r: Dictionary) -> String:
 		14: return "无 相 · 心 魔"
 		15: return "符 祖"
 		16: return "轮 回 使"
+		17: return "钟 楼 旧 主"
 		_: return "Boss"

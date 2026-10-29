@@ -1200,6 +1200,9 @@ func _run() -> void:
 	cfg76.prologue_done = false
 	main.call("_start_run", false)
 	main.call("_confirm_weapon")
+	# R39：无伤走完序章会开「顶阁」（隐藏 Boss），那是另一条路径（见 T180）。
+	# 这条用例守的是**普通路径**：先模拟一次受击，让它照旧回主线。
+	Game.dmg_taken += 1
 	var in_prologue: bool = bool(main.get("prologue_mode"))
 	var n76: int = (main.get("enemies") as Array).size()
 	# 三间房依次清场
@@ -3570,6 +3573,105 @@ func _run() -> void:
 	Game.karma = s176_saved_k
 	Game.spared_count = s176_saved_s
 
+	# ============ R39 隐藏 Boss · 钟楼旧主 ============
+	# T180：无伤走完序章 → 开顶阁（第 4 间）；已打赢过就不再开
+	var s180_cfg = root.get_node_or_null("Cfg")
+	var s180_saved_done: bool = bool(s180_cfg.prologue_done)
+	var s180_saved_master: bool = bool(s180_cfg.old_master_beaten)
+	s180_cfg.prologue_done = false
+	s180_cfg.old_master_beaten = false
+	main.call("_start_run", false)
+	main.call("_confirm_weapon")
+	# 关键：**不**制造受击 —— Game.dmg_taken 保持与 _prologue_dmg0 相同
+	var s180_in_prologue: bool = bool(main.get("prologue_mode"))
+	for _k in 3:
+		main.call("_resolve_room_clear", false)
+	var s180_rooms: Array = main.get("rooms")
+	var s180_i: int = int(main.get("room_i"))
+	var s180_top_name: String = str(main.get("room_name"))
+	var s180_top_boss := -1
+	if s180_i >= 0 and s180_i < s180_rooms.size():
+		s180_top_boss = int((s180_rooms[s180_i] as Dictionary).get("boss", -1))
+	# 打赢过 → 即使无伤也不开顶阁
+	s180_cfg.old_master_beaten = true
+	var s180_again := false
+	main.call("_start_run", false)
+	main.call("_confirm_weapon")
+	for _k in 3:
+		main.call("_resolve_room_clear", false)
+	s180_again = bool(main.get("prologue_mode"))
+	s180_cfg.old_master_beaten = false
+	if s180_in_prologue and s180_rooms.size() == 4 and s180_top_boss == 17 \
+			and s180_top_name == "钟 楼 · 顶 阁" and not s180_again:
+		_log("PASS T180 无伤走完序章 → 开顶阁（第 %d 间，boss=%d）；打赢过则不再开"
+			% [s180_i + 1, s180_top_boss])
+	else:
+		_log("FAIL T180 序章=%s 房数=%d 末间=%s boss=%d 重复开=%s dmg=%d dmg0=%d"
+			% [str(s180_in_prologue), s180_rooms.size(), s180_top_name,
+				s180_top_boss, str(s180_again), int(Game.dmg_taken),
+				int(main.get("_prologue_dmg0"))])
+
+	# T181：钟楼旧主的参数 —— 全作最慢 / 最硬 / 前摇最长
+	var s181_p = r37_es.new()
+	s181_p.setup(r37_es.KIND_BOSS9, Vector2(600.0, 700.0), null, null)
+	var s181_is_boss: bool = s181_p.is_boss_family()
+	var s181_title: String = str(s181_p.boss_title())
+	var s181_hp: int = int(s181_p.max_hp)
+	var s181_phase: int = int(s181_p.phase_max)
+	var s181_speed: float = float(s181_p.move_speed)
+	var s181_stagger: float = float(s181_p.stagger_max)
+	var s181_windup: float = float(s181_p._windup_now())
+	# 反向：他不能是精英（R37 的分发 bug 就是这么来的）
+	var s181_elite: bool = s181_p.is_elite()
+	s181_p.free()
+	if s181_is_boss and s181_title == "钟 楼 旧 主" and s181_hp == 20 and s181_phase == 2 \
+			and s181_speed <= 100.0 and s181_stagger >= 190.0 \
+			and absf(s181_windup - 0.62) < 0.01 and not s181_elite:
+		_log("PASS T181 钟楼旧主：HP %d / %d 阶段 / 移速 %.0f（最慢）/ 硬直 %.0f（最硬）/ 前摇 %.2fs（最长）"
+			% [s181_hp, s181_phase, s181_speed, s181_stagger, s181_windup])
+	else:
+		_log("FAIL T181 boss=%s 名=%s HP=%d 阶段=%d 移速=%.0f 硬直=%.0f 前摇=%.2f 精英=%s"
+			% [str(s181_is_boss), s181_title, s181_hp, s181_phase,
+				s181_speed, s181_stagger, s181_windup, str(s181_elite)])
+
+	# T182：他只出慢刀 —— _decide() 必须直接进 WINDUP，不读招 / 不瞬移 / 不远程 / 不防御
+	var s182_p = r37_es.new()
+	s182_p.setup(r37_es.KIND_BOSS9, Vector2(600.0, 700.0), null, null)
+	var s182_states := []
+	for _k in 12:
+		s182_p._cd = 0.0
+		s182_p._decide()
+		s182_states.append(int(s182_p.state))
+	var s182_all_windup := true
+	for st in s182_states:
+		if st != int(r37_es.WINDUP):
+			s182_all_windup = false
+	var s182_wt: float = float(s182_p.windup_t)
+	s182_p.free()
+	if s182_all_windup and absf(s182_wt - 0.62) < 0.01:
+		_log("PASS T182 钟楼旧主只出慢刀：12 次选招全部进 WINDUP（前摇 %.2fs）" % s182_wt)
+	else:
+		_log("FAIL T182 选招状态=%s 前摇=%.2f" % [str(s182_states), s182_wt])
+
+	# T183：打赢 → 记标记 + 回主线第一关（不留在序章）
+	s180_cfg.old_master_beaten = false
+	var s183_saved_lv: int = int(main.get("level_index"))
+	main.call("_finish_old_master")
+	var s183_beaten: bool = bool(s180_cfg.old_master_beaten)
+	var s183_prologue: bool = bool(main.get("prologue_mode"))
+	var s183_lv: int = int(main.get("level_index"))
+	var s183_name: String = str(main.get("level_name"))
+	main.set("level_index", s183_saved_lv)
+	if s183_beaten and not s183_prologue and s183_lv == 0 and s183_name == RoomScript6.level_name(0):
+		_log("PASS T183 打赢钟楼旧主：记 old_master_beaten · 回主线「%s」" % s183_name)
+	else:
+		_log("FAIL T183 beaten=%s prologue=%s lv=%d name=%s"
+			% [str(s183_beaten), str(s183_prologue), s183_lv, s183_name])
+	# 还原
+	s180_cfg.old_master_beaten = s180_saved_master
+	s180_cfg.prologue_done = s180_saved_done
+	s180_cfg.save_cfg()
+
 
 # R35 自测用的轻量 Mock（不进游戏，只驱动 companion.gd 的纯逻辑分支）
 class MockCPlayer extends RefCounted:
@@ -3607,7 +3709,7 @@ class MockCEnemy extends RefCounted:
 
 func _report() -> void:
 	_log("")
-	_log("===== R12–R15 + R18/R18b + R19a/R19b/R20–R38 全功能自测汇总 =====")
+	_log("===== R12–R15 + R18/R18b + R19a/R19b/R20–R39 全功能自测汇总 =====")
 	var pass_n := 0
 	var fail_n := 0
 	var warn_n := 0

@@ -51,7 +51,7 @@ if errorlevel 1 (
 )
 echo.
 
-echo [3/3] full self-test (tools/selftest.gd, 196 assertions) ...
+echo [3/3] full self-test (tools/selftest.gd, 200 assertions) ...
 "%GODOT%" --headless --path "%PROJECT%" --script "res://tools/selftest.gd" > "%LOGDIR%\_selftest.log" 2>&1
 if errorlevel 1 (
     echo   [ERR] self-test aborted, see tools\logs\_selftest.log
