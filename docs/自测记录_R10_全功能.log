@@ -1,0 +1,54 @@
+================================================================
+ 玄界 XUANJIE · R10 全功能自测记录（源码运行，工具脚本驱动）
+ 时间：2026-10-27 01:29（第二轮：需求④⑤ 由接口检查升级为运行时行为实测）
+ 引擎：Godot 4.7.2.stable (GL Compatibility)
+ 工具：tools/selftest.gd（替代 R9 被清理的 tools/ 自测脚本）
+ 命令：Godot_v4.7.2-stable_win64_console.exe --headless --path D:/XUANJIE --script res://tools/selftest.gd
+ 结果：30 条断言 PASS，0 FAIL（另有 2 条 WARN 为汇总空行/非关键提示，非失败）
+ 说明：--script 模式不自动加载 main_scene，脚本主动 load Main.tscn；
+       autoload 单例（Game/SFX/Cfg）编译期不可见，运行时经节点路径获取；
+       存档/读档接口在 Cfg 单例（save_slot(i,data)/load_slot(i)），非 Game。
+================================================================
+
+[节点]     节点就绪：root_child=4(G+SFX+Cfg+Main) player_valid=true game=true
+
+[需求④ L0] 进 Boss 房四面落闸锁定 / Boss 已生成 is_boss=true kind=2 / Boss 死→四向开门解锁
+[需求④ L1] 进 Boss 房四面落闸锁定 / Boss kind=3 / 死→解锁
+[需求④ L2] 进 Boss 房四面落闸锁定 / Boss kind=6 / 死→解锁
+[需求④ L3] 进 Boss 房四面落闸锁定 / Boss kind=7 / 死→解锁
+[流程]     自动通关 4 关 → 抵达 WIN（levels_cleared=4）
+
+[需求③]    武器切换生效：sword → spear（右上角武器钮有效）
+[UI]       设置页可进入（右上角设置钮有效）
+[UI]       暂停可进入（右上角暂停钮有效）
+[存档]     存档/读档 slot0 可用（hp=5.0 weapon=spear，Cfg 单例）
+[每日]     每日种子同日稳定 seed=1601691485
+[地图]     关卡数=4（≥4）
+[武器]     武器列表=3 种（剑/枪/双刀齐全）
+[遗物]     遗物池可抽取（pick_three → 3 张）
+
+-- 以下两段为本轮新增：需求④⑤ 由「接口就位」升级为「运行时行为实测」 --
+
+[需求⑤]    起手即「停手后干净起手」→ perfect_ready=true
+[需求⑤]    连续攻击（未停手）不触发完美拼刀 → perfect_ready=false   ★核心：满足用户「持续攻击不触发完美拼刀」
+[需求⑤]    停手足够久后再出刀 → perfect_ready=true（可完美拼刀）
+           验证方法：直接驱动玩家拼刀门控（player._start_stage + _atk_end_t，
+           同钟 _t 比较），证明 perfect_ready 严格按 (_t - _atk_end_t) >= PERFECT_GAP(0.30) 判定。
+
+[需求④]    Boss kind=2 含格挡/拼刀机制（可进 DEFEND、重击破防生效）
+[需求④]    Boss kind=3 含格挡/拼刀机制（可进 DEFEND、重击破防生效）
+[需求④]    Boss kind=6 含格挡/拼刀机制（可进 DEFEND、重击破防生效）
+[需求④]    Boss kind=7 含格挡/拼刀机制（可进 DEFEND、重击破防生效）
+           验证方法：逐个 EnemyScript.new().setup(kind,...) 实例化 4 个 Boss，
+           断言 is_boss / has_method(on_clash) / has_method(add_stagger)，
+           并真实置 DEFEND 后受重击 → 转 STAGGER（证明格挡可被打破、机制可用）。
+           满足用户「所有 boss 配置格挡技能」。
+
+[地图]     房间类型常量齐全（start/boss/chest/shop/...）
+
+===== 汇总 =====
+PASS=30  FAIL=0  WARN=2
+
+注：退出时 ObjectDB 泄漏警告为测试脚本主动加载场景后 quit 的残留，非游戏缺陷；
+    无头环境不覆盖纯视觉/坐标类断言（2.5D 命线/深度投影、跳跃攀爬、触屏缩放），
+    该类请在真机（PC 双击 XUANJIE.exe / 安卓装 XUANJIE.apk）回归。

@@ -1,0 +1,87 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+DEBUG root_child_count=4
+DEBUG child name=Game script=res://scripts/game.gd
+DEBUG child name=SFX script=res://scripts/sfx.gd
+DEBUG child name=Cfg script=res://scripts/settings.gd
+DEBUG child name=Main script=res://scripts/main.gd
+PASS 节点就绪：root_child=4 player_valid=true game=true
+PASS L0 进 Boss 房四面禁制锁定
+PASS L0 Boss 已生成 is_boss=true kind=2
+PASS L0 Boss 死 → 四向开门解锁
+PASS L1 进 Boss 房四面禁制锁定
+PASS L1 Boss 已生成 is_boss=true kind=3
+PASS L1 Boss 死 → 四向开门解锁
+PASS L2 进 Boss 房四面禁制锁定
+PASS L2 Boss 已生成 is_boss=true kind=6
+PASS L2 Boss 死 → 四向开门解锁
+PASS L3 进 Boss 房四面禁制锁定
+PASS L3 Boss 已生成 is_boss=true kind=7
+PASS L3 Boss 死 → 四向开门解锁
+PASS 自动通关 4 关 → 抵达 WIN（levels_cleared=4）
+PASS 需求③ 武器切换生效：sword → spear（右上角武器钮有效）
+PASS 设置页可进入（右上角设置钮有效）
+PASS 暂停可进入（右上角暂停钮有效）
+PASS 存档/读档 slot0 可用（hp=5.0 weapon=spear）
+PASS 每日种子同日稳定 seed=1601691485
+PASS 关卡数=4（≥4）
+PASS 武器列表=3 种（剑/枪/双刀齐全）
+PASS 法宝池可抽取（pick_three → 3 张）
+PASS 需求⑤ 起手即「停手后干净起手」→ perfect_ready=true
+PASS 需求⑤ 连续攻击（未停手）不触发完美剑意交锋：perfect_ready=false
+PASS 需求⑤ 停手足够久后再出刀 → perfect_ready=true（可完美剑意交锋）
+PASS 需求④ Boss kind=2 含格挡/剑意交锋机制（可进DEFEND、重击破防生效）
+PASS 需求④ Boss kind=3 含格挡/剑意交锋机制（可进DEFEND、重击破防生效）
+PASS 需求④ Boss kind=6 含格挡/剑意交锋机制（可进DEFEND、重击破防生效）
+PASS 需求④ Boss kind=7 含格挡/剑意交锋机制（可进DEFEND、重击破防生效）
+PASS 房间类型常量齐全（start/boss/chest/shop/...）
+PASS T31 普通格挡3次 posture=54（期望54）
+PASS T32 完美弹反 玩家posture=0 敌方posture=22.0/55.0
+PASS T33 玩家护体罡气满→道心失守(1.2s)→恢复
+PASS T34 敌方道心失守→处决 dmg=10 hp 40→30 护体罡气重置
+PASS T35 PERFECT_GAP 门控：连续攻击不计完美（clash=1 perfect=0 posture=18）
+PASS T36 门影四关递增 [0.1, 0.24, 0.48, 0.8]
+PASS T37 残碑四关四句互异
+PASS T38 战前台词只触发一次（first=true second=false delta=1）
+PASS T39 负匣人台词随关卡变化
+PASS T40 记忆回响取武器配色（spear hue=0.10）
+PASS T41 连招段数差异化 剑3/枪3/双刀4
+PASS T42 护体罡气压制总量 剑0.21/枪0.25/双刀0.44（双刀=剑×2.10）
+PASS T43 取消窗口 剑0.34关/0.36开 枪0.36关/0.80开 桩步(2段)0.60开/无法宝关
+PASS T44 长枪距离惩罚 远2/近1（剑无惩罚 远1/近1）
+PASS T45 护体罡气回落 2.2s内保持(27.5) 之后掉到9.9 命中重置计时
+PASS T46 位次容量 剑位3件封顶，第4件被拒；替换后可进（edge→thunder）
+PASS T47 流派名 剑满=剑 修 / 剑飞剑+灵2=飞 剑 流 / 体满=体 修
+PASS T48 飞剑伤害 基础1 → 穿云2 → 飞剑流3
+PASS T49 飞剑只在末段甩出（前段0次 / 末段1次 / 生成2道 dmg=3）
+PASS T50 开局清空法宝 + 剑鞘护体罡气上限 100→120
+PASS T51 奖励页位次满 → 替换页（3 张）→ 换成功（edge→thunder）
+PASS T52 环境静物映射 4关×6房 房型/前后层全部一致
+PASS T53 伪楼层只在尸解墓道成立 [false, false, true, false]
+PASS T54 禁制落下 开门0.00 → 落下1.00 → 解锁0.00
+PASS T55 引导者只 Boss 房淡入（0.00→0.29→1.00），建言一次后不再重复
+PASS T56 引导者四关四句互异且不与残碑/负匣人重复
+PASS T57 四幕结构 4 幕 × 3 卷 = 12（唯一 id=12）
+PASS T58 act_done 空=false 半=false 全=true
+PASS T59 self_line_for 0/3/6/9/12 阈值正确
+PASS T60 身份称号五档 + 余量 3/2/0
+PASS T61 图鉴 进入/右翻2/右翻3/左回2/返回
+PASS T62 收集 3 条 → 排队 need=3 → 自述解锁
+PASS T63 精英替换率 14.5%（58/400 间房），关卡一 0 只
+PASS T64 剑修傀儡罡气 120：平砍10下不破 / 重击2下不破 / 第3下破
+PASS T65 丹修自爆 2.0s 硬直可处决，挨刀即中断
+PASS T66 怨灵锁阴界 z=0.88：阳界打不到/看不见，入阴才够得着
+PASS T67 五种变奏全部可触发（护盾/狂暴/召唤/自爆/读招）
+PASS T68 关卡一不刷精英/变奏，关卡四 6 种精英且从不叠变奏
+PASS T69 三把武器绝招形态 line/lance/spin，总伤害均 6，名字 ["剑 心 · 一 线", "枪 出 如 龙", "双 生 · 旋 刃"]
+PASS T70 环形绝招命中扣血 12 → 9
+PASS T71 直线绝招：框内扣 4 血，框外不受影响
+PASS T72 绝招守阴阳：阳界打不到阴界怨灵（4→4），入阴后命中（→1）
+PASS T73 绝招调度按形态排段：["sword 1→0", "spear 3→2", "dual 6→5"]
+
+===== R12 + R13 + R14 + R15 全功能自测汇总 =====
+PASS=73  FAIL=0  WARN=0
+WARNING: 25 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 6 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

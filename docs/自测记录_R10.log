@@ -1,0 +1,60 @@
+================================================================
+ 玄界 XUANJIE · R10 自测记录（源码运行 + 导出版）
+ 时间：2026-10-27 01:08
+ 引擎：Godot 4.7.2.stable (GL Compatibility)
+ 背景：R10 主控制器 scripts/main.gd 曾被写坏（混入 /* */、&&、?: 等 C/JS 语法，
+       并引用不存在的 ParticleStream/_find_boss/_open_gate），导致游戏无法启动。
+       本次完整重建 main.gd，落地需求①~⑥；本记录覆盖 R10 的编译/启动/流程/出包验证。
+ 结果：编译 SCRIPT ERROR = 0；自动通关 4 关 4 Boss → WIN；需求④落闸断言全过；
+       导出 exe/apk 启动自检零报错。
+ 说明：本次未重跑 R9 口径的 T1–T30 全功能自测（该自测脚本在 R9 清理时已移除），
+       完整功能回归见文末「下一步」。
+================================================================
+
+一、编译 / 启动检查（--headless）
+  命令1：Godot_v4.7.2-stable_win64_console.exe --headless --path D:/XUANJIE --quit
+  结果 ：exit=0，日志仅引擎头信息，SCRIPT ERROR = 0
+  命令2：--headless --path D:/XUANJIE --quit-after 120（空闲绘制 120 帧）
+  结果 ：exit=0，120 帧标题界面绘制零运行时报错
+
+二、自动通关驱动测试（一次性脚本 --script res://scripts/_smoke.gd，已删）
+  驱动 ：自动 title→选武器→逐房推进→遇 Boss 自动拼刀/输出→清场开门→连过 4 关
+  断言（需求④ Boss 房落闸）：
+    · 进 Boss 房瞬间 boss_room_locked == true                PASS
+    · 进 Boss 房瞬间 _set_gates(true) 四面闸门全锁           PASS
+    · Boss 存活期间击杀分身不触发结算/开门                   PASS（修复点2）
+    · Boss 死亡后 boss_room_locked == false 且四向开门        PASS
+  流程断言：
+    · 起点房（无敌人）不卡死，自动进下一间                    PASS（修复点1）
+    · levels_cleared = 4 / bosses_killed = 4                 PASS
+    · final_state == "win"                                   PASS
+  结果 ：exit=0，无 FAIL 行，自动通关达成
+
+三、重建中修复的 3 个真实 bug（Godot 编译/实跑才暴露，纯静态核对看不出）
+  1. 起点房死锁：KIND_START 无敌人且非事件房，旧逻辑卡在 play 出不去
+     → 无战斗目标即标记已清场并自动推进
+  2. Boss 分身误结算：Boss 召唤分身被击杀会误触发房间结算/提前开门
+     → Boss 房仅在 Boss 本体死亡时结算；普通房才等全员清空
+  3. Godot 4 语法/类型：
+     · Object.get() 仅 1 参：e.get("kind",0) → e.kind
+     · 节点引用强类型导致脚本方法无法解析 → 改无类型 + 局部显式标注
+
+四、导出与启动自检（R10 已出包）
+  命令 ：--export-release "Windows Desktop" → XUANJIE.exe   (~117 MB)
+         --export-release "Android"         → XUANJIE.apk  (~38 MB, 签名 v2/v3)
+  自检 ：XUANJIE.exe --headless --quit → exit=0，日志零报错
+  备份 ：旧包保留为 XUANJIE_R9.exe / XUANJIE_R9.apk
+
+五、需求①~⑥ 落地对照
+  ① 360° 无限制移动轮盘  → touch.gd 早已实现（输出 Game.stick），本版确认接线 + 保留 --touch 强制显示
+  ② 微观房间 + 2.5D 探索  → rooms.gd(3×2网格) + world.gd(落石门锁) 就绪，main 完整驱动进/清/开门
+  ③ 右上角 设置+武器 钮   → hud.gd 画 TOP_BTN；main.top_hit() 接管，_cycle_weapon() 轮换 剑/枪/双刀
+  ④ Boss 房进房四面落闸    → _enter_room 置锁+_set_gates(true)；_on_enemy_killed 击败后解锁开门  ✅本论新逻辑
+  ⑤ 持续连段不完美拼刀    → 复用 player.perfect_ready（停手≥0.30s 再出首刀才为真）            ✅本论新逻辑
+  ⑥ 任务列表/完成情况/方向 → 任务进度表.md / 更新明细.md / 本自测记录 已随改随更
+
+六、下一步（待补）
+  - [ ] 重跑 R9 口径 T1–T30 全功能自测（拼刀/格挡/连段/耐力/硬直/三 Boss/存档读档/
+        商店/分叉/每日种子/2.5D 深度 等）；需先把 tools/ 自测脚本补回（当前仅留 gen_sfx.py）
+  - [ ] 真机手感回归：PC 双击 XUANJIE.exe / 安卓装 XUANJIE.apk，确认 360° 轮盘 & 右上角三钮拇指可达
+  - [ ] 落闸视觉/音效微调、完美拼刀窗口（PERFECT_GAP=0.30s）手感校准

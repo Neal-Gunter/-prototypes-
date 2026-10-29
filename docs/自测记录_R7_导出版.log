@@ -1,0 +1,37 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 616.92 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4060 Ti
+
+[shot] _shot_title.png
+[shot] _shot_play.png
+[shot] _shot_clash.png
+[T1 clash] 普通拼刀 次数=1 完美=0 (期望 1 / 0) enemy_hp=12 player_hp=5
+[T1b perfect] 完美=1 (期望 1) 累计拼刀=2 敌人状态=5
+[T1c heavy] 蓄力期间拼刀次数 2 -> 2 (期望不增加) clash_rect=[P: (0.0, 0.0), S: (0.0, 0.0)]
+[T2 hit] enemy_hp=11 (期望 11)  player_hp=5
+[T3 hurt] player_hp=4 (期望 4)
+[shot] _shot_boss.png
+[T4 boss] 房间=5 boss=true 关卡Boss=true 石门=false hud_boss=true
+[shot] _shot_guard.png
+[T5 block] player_hp=5 (期望 5) posture=1 (期望 1) guard_count=1
+[T6 djump] y0=737.0 单跳后 y=626.0 jl=1 -> 二段 vy=-438.0 jl=0 y=539.0
+[shot] _shot_climb.png
+[shot] _shot_mantle.png
+[T7 climb] on_wall=true 爬升 700.0 -> 629.0 翻越=true 翻越后 y=406.0 站稳 y=407.0 (期望 ≈407，站在墙顶)
+[T8 combo] stage=3 (期望 3)  enemy_hp=8 (期望 8 = 三段 1+1+2)  max_combo=3
+[T9 stamina] 满耐力=100.0 出刀后=91.0 | 耐力4时出刀=被拦下 力竭=true 1秒后回复到=47.0
+[T10 stagger] 硬直度 0 -> 20.0 -> 打满触发=true 硬直时长=2.20 重置为=0.0
+[shot] _shot_boss2.png
+[T11 boss2] 血量 12 阶段1->2 血=12 阶段3 血=12 | 读招闪避 32/60 | 三阶段击杀=true
+[shot] _shot_boss2_fight.png
+[T12 boss2 ai] 状态=[1, 2, 3, 4] 狂暴过=true 远程弹幕=1 阶段=3
+[T13 atkspd] 初始=0.78 → 连打26刀=1.34 (热度 1.00) → 停手5秒后=1.07
+[shot] _shot_boss3_aoe.png
+[T14 boss3] 阶段1 tier=3 读招/闪避=33/60 范围震波=true | 阶段2 tier=4 闪现=30/80 | 阶段3 tier=5 分身=2 双技=「dodge」
+[shot] _shot_boss3_storm.png
+[shot] _shot_boss3.png
+[T15 boss3 storm] 状态=play boss==boss3=true 阶段=3 死亡=false | 变暗=1.00 天雷节点=1 闪光峰值=1.00 hud暗=1.00
+[T16 settings] 打开=true 返回标题=true master=0.50 行=0 动作=0
+[T17 save/load] 读档后 hp=3 房间=3 状态=play (期望 3 / 3 / play)
+[T18 reward] 选前=0 选后=1 状态=play (期望 +1 / play)
+[T19 level] 进入关卡=1 关卡名=关卡二 · 深 渊 阶 梯 状态=play (期望 1 / 深渊阶梯 / play)
+[test] done, enemies=4

@@ -1,0 +1,58 @@
+================================================================
+ 玄界 XUANJIE · R8 自测记录
+ 时间：2026-10-26 10:49:27
+ 引擎：Godot 4.7.2.stable (GL Compatibility)
+ 命令：XUANJIE.exe -- --test
+ 结果：T1–T28 共 30 条断言全部通过，SCRIPT ERROR = 0
+================================================================
+
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 616.92 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4060 Ti
+
+[shot] D:/XUANJIE/_shot_title.png
+[shot] D:/XUANJIE/_shot_weapon.png
+[shot] D:/XUANJIE/_shot_play.png
+[shot] D:/XUANJIE/_shot_clash.png
+[T1 clash] 普通拼刀 次数=1 完美=0 (期望 1 / 0) enemy_hp=12 player_hp=5
+[T1b perfect] 完美=1 (期望 1) 累计拼刀=2 敌人状态=5
+[T1c heavy] 蓄力期间拼刀次数 2 -> 2 (期望不增加) clash_rect=[P: (0.0, 0.0), S: (0.0, 0.0)]
+[T2 hit] enemy_hp=11 (期望 11)  player_hp=5
+[T3 hurt] player_hp=4 (期望 4)
+[shot] D:/XUANJIE/_shot_boss.png
+[T4 boss] 房间=5 boss=true 关卡Boss=true 石门=false hud_boss=true
+[shot] D:/XUANJIE/_shot_guard.png
+[T5 block] player_hp=5 (期望 5) posture=1 (期望 1) guard_count=1
+[T6 djump] y0=737.0 单跳后 y=626.0 jl=1 -> 二段 vy=-466.0 jl=0 y=539.0
+[shot] D:/XUANJIE/_shot_climb.png
+[shot] D:/XUANJIE/_shot_mantle.png
+[T7 climb] on_wall=true 爬升 700.0 -> 629.0 翻越=true 翻越后 y=406.0 站稳 y=407.0 (期望 ≈407，站在墙顶)
+[T8 combo] stage=3 (期望 3)  enemy_hp=8 (期望 8 = 三段 1+1+2)  max_combo=3 各段后血量=[11, 10, 10, 8]
+[T9 stamina] 满耐力=100.0 出刀后=91.0 | 耐力4时出刀=被拦下 力竭=true 1秒后回复到=47.0
+[T10 stagger] 硬直度 0 -> 20.0 -> 打满触发=true 硬直时长=2.20 重置为=0.0
+[shot] D:/XUANJIE/_shot_boss2.png
+[T11 boss2] 血量 12 阶段1->2 血=12 阶段3 血=12 | 读招闪避 37/60 | 三阶段击杀=true
+[shot] D:/XUANJIE/_shot_boss2_fight.png
+[T12 boss2 ai] 状态=[1, 2, 3, 4] 狂暴过=true 远程弹幕=1 阶段=3
+[T13 atkspd] 初始=0.78 → 连打26刀=1.34 (热度 1.00) → 停手5秒后=1.07
+[shot] D:/XUANJIE/_shot_boss3_aoe.png
+[T14 boss3] 阶段1 tier=3 读招/闪避=34/60 范围震波=true | 阶段2 tier=4 闪现=38/80 | 阶段3 tier=5 分身=2 双技=「aoe」
+[shot] D:/XUANJIE/_shot_boss3_storm.png
+[shot] D:/XUANJIE/_shot_boss3_storm.png
+[shot] D:/XUANJIE/_shot_boss3.png
+[T15 boss3 storm] 状态=play boss==boss3=true 阶段=3 死亡=false | 变暗=1.00 天雷节点=2 闪光峰值=0.96 hud暗=1.00
+[T16 settings] 打开=true 返回标题=true master=0.50 行=0 动作=0
+[T17 save/load] 读档后 hp=3 房间=3 状态=play (期望 3 / 3 / play)
+[shot] D:/XUANJIE/_shot_reward.png
+[T18 reward] 选前=0 选后=1 状态=play (期望 +1 / play)
+[T19 level] 进入关卡=1 关卡名=关卡二 · 深 渊 阶 梯 状态=play (期望 1 / 深渊阶梯 / play)
+[T20 weapon] ["sword 伤害1 刀锋66 攻速1.34", "spear 伤害2 刀锋96 攻速1.10", "dual 伤害1 刀锋58 攻速1.68"]
+[T21 set] 刃套 伤害 1→1 触发=true ｜ 壁套 架势 3→5 ｜ 灵套 灵魂 1.0→1.25 绝招 210.0→294.0
+[T22 chest] 面板=true 遗物=1 灵魂=20.0 状态=play (期望 true / 1 / 20 / play)
+[T23 shop] 标价=26 买到=1 灵魂 90→64.0 (期望 64) 重复购买后=1 (期望 1 件)
+[T24 branch] 稳路敌人=1 险路敌人=4 实际生成=4 遗物卡=4 状态=reward (期望 险>稳 / 4 张 / reward)
+[T25 daily] 种子=1584913866 同日稳定=true 选择页一致=true 文案=今 日 种 子 2026-10-26
+[shot] D:/XUANJIE/_shot_final_boss.png
+[T26 level3/4] 关卡三=关卡三 · 玄 铁 墓 道 守陵人=true/守 陵 人 · 无 相 阶段=2 ｜ 关卡四=关卡四 · 玄 界 之 门 玄界之影=true/玄 界 之 影 三阶段变暗=1.00 天雷峰值=1 闪光峰值=0.91
+[T27 touch layout] 缩放 1.0→1.3 位移=(-40.0, -60.0) 复位后=(0.0, 0.0)
+[T28 levels/lore] 关卡数=4 碎片池=12 收集 0→1 (重复不计数)
+[test] done, enemies=11
